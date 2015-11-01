@@ -8,3 +8,19 @@
 
    ==========================================*/
 
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <stdio.h>
+ 
+typedef int (*orig_open_f_type)(const char *pathname, int flags);
+
+int open(const char *pathname, int flags, ...) {
+  static int counter = 0;
+  counter++;
+
+  printf("Fake open #%d\n", counter);
+
+  orig_open_f_type orig_open;
+  orig_open = (orig_open_f_type)dlsym(RTLD_NEXT,"open");
+  return orig_open(pathname,flags);
+}
