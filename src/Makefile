@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -fPIC -ldl -shared
+CFLAGS= -Wall -g -O2 -fPIC -ldl -shared
 RM= rm -f
 LIBNAME=libbufread
 .PHONY: all clean
