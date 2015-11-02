@@ -11,16 +11,26 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdio.h>
- 
+
+// #define VERBOSE
+
 typedef int (*orig_open_f_type)(const char *pathname, int flags);
+typedef int (*orig_close_f_type)(int fd);
 
 int open(const char *pathname, int flags, ...) {
-  static int counter = 0;
-  counter++;
+  orig_open_f_type orig_open = (orig_open_f_type)dlsym(RTLD_NEXT,"open");
+  int fd = orig_open(pathname, flags);
+#ifdef VERBOSE
+  printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
+#endif
+  return fd;
+}
 
-  printf("Fake open #%d\n", counter);
-
-  orig_open_f_type orig_open;
-  orig_open = (orig_open_f_type)dlsym(RTLD_NEXT,"open");
-  return orig_open(pathname,flags);
+int close(int fd, ...) {
+  orig_close_f_type orig_close = (orig_close_f_type)dlsym(RTLD_NEXT,"close");
+  int return_result = orig_close(fd);
+#ifdef VERBOSE
+  printf("File descriptor %d closed with the result %d...\n", fd, return_result);
+#endif
+  return return_result;
 }
