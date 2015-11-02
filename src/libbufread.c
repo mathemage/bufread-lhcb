@@ -18,14 +18,14 @@
 typedef int (*orig_open_f_type)(const char *pathname, int flags);
 typedef int (*orig_close_f_type)(int fd);
 typedef ssize_t (*orig_read_f_type)(int fd, void *buf, size_t count);
-typedef char byte;
 
 const int open_files_limit = 1024;
-byte **buffers = NULL;
+void **buffers = NULL;
+const int blocksize = 16777216;     // 16 MB
 
 void init_buffers() {
   if (buffers == NULL) {
-    buffers = calloc(open_files_limit, sizeof(byte*));
+    buffers = calloc(open_files_limit, sizeof(void*));
     int i;
     for (i = 0; i < open_files_limit; i++) {
       buffers[i] = NULL;
@@ -40,6 +40,7 @@ int open(const char *pathname, int flags, ...) {
 #ifdef VERBOSE
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
+  buffers[fd] = malloc(2 * blocksize); 
   return fd;
 }
 
@@ -49,6 +50,8 @@ int close(int fd, ...) {
 #ifdef VERBOSE
   printf("File descriptor %d closed with the result %d...\n", fd, return_result);
 #endif
+  free(buffers[fd]);
+  buffers[fd] = NULL;
   return return_result;
 }
 
