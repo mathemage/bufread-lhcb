@@ -22,10 +22,12 @@ typedef ssize_t (*orig_read_f_type)(int fd, void *buf, size_t count);
 const int open_files_limit = 1024;
 void **buffers = NULL;
 const int blocksize = 16777216;     // 16 MB
+int *buf_offsets;
 
 void init_buffers() {
   if (buffers == NULL) {
     buffers = calloc(open_files_limit, sizeof(void*));
+    buf_offsets = (int *) calloc(open_files_limit, sizeof(int));
     int i;
     for (i = 0; i < open_files_limit; i++) {
       buffers[i] = NULL;
@@ -41,6 +43,7 @@ int open(const char *pathname, int flags, ...) {
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
   buffers[fd] = malloc(2 * blocksize); 
+  buf_offsets[fd] = 0;
   return fd;
 }
 
