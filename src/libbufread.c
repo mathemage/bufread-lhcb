@@ -8,21 +8,14 @@
 
    ==========================================*/
 
-#define _GNU_SOURCE
-#include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "libbufread.h"
 
 #define VERBOSE
-
-typedef int (*orig_open_f_type)(const char *pathname, int flags);
-typedef int (*orig_close_f_type)(int fd);
-typedef ssize_t (*orig_read_f_type)(int fd, void *buf, size_t count);
+#define BLOCKSIZE 16777216     // 16 MB
 
 const int open_files_limit = 1024;
 void **buffers = NULL;
-const int blocksize = 16777216;     // 16 MB
+const int bufsize = 2 * BLOCKSIZE;
 int *buf_offsets;
 // TODO eof_indices
 
@@ -44,13 +37,13 @@ int open(const char *pathname, int flags, ...) {
 #ifdef VERBOSE
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
-  buffers[fd] = malloc(2 * blocksize); 
+  buffers[fd] = malloc(bufsize); 
   buf_offsets[fd] = 0;
 
   // initial read
   orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
-  ssize_t bytes_read = orig_read(fd, buffers[fd], 2 * blocksize);
-  if (bytes_read < 2 * blocksize) {
+  ssize_t bytes_read = orig_read(fd, buffers[fd], bufsize);
+  if (bytes_read < bufsize) {
     // TODO EOF not reached
   } else {
     // TODO EOF reached

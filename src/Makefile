@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS= -Wall -g -O2 -fPIC -ldl -shared
+INC_DIR=../include
+CFLAGS= -Wall -g -O2 -fPIC -ldl -shared -I$(INC_DIR)
 RM= rm -f
 LIBNAME=libbufread
 .PHONY: all clean
