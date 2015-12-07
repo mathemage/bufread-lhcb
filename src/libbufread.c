@@ -16,13 +16,14 @@
 const int open_files_limit = 1024;
 void **buffers = NULL;
 const int bufsize = 2 * BLOCKSIZE;
-int *buf_offsets;
-// TODO eof_indices
+int *read_offsets;
+int *eof_offsets;
 
 void init_buffers() {
   if (buffers == NULL) {
     buffers = calloc(open_files_limit, sizeof(void*));
-    buf_offsets = (int *) calloc(open_files_limit, sizeof(int));
+    read_offsets = (int *) calloc(open_files_limit, sizeof(int));
+    eof_offsets = (int *) calloc(open_files_limit, sizeof(int));
     int i;
     for (i = 0; i < open_files_limit; i++) {
       buffers[i] = NULL;
@@ -38,11 +39,12 @@ int open(const char *pathname, int flags, ...) {
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
   buffers[fd] = malloc(bufsize); 
-  buf_offsets[fd] = 0;
+  read_offsets[fd] = 0;
 
   // initial read
   orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
   ssize_t bytes_read = orig_read(fd, buffers[fd], bufsize);
+
   if (bytes_read < bufsize) {
     // TODO EOF not reached
   } else {
@@ -70,8 +72,8 @@ ssize_t read(int fd, void *buf, size_t count) {
   ssize_t bytes_read;
   if (buffers[fd] != NULL) {
     // TODO what if reached end of buffer
-    memcpy(buf, buffers[fd] + buf_offsets[fd], count);
-    buf_offsets[fd] += count;
+    memcpy(buf, buffers[fd] + read_offsets[fd], count);
+    read_offsets[fd] += count;
 
     // TODO do differently for corner cases
     bytes_read = count;
