@@ -14,19 +14,35 @@
 #define BLOCKSIZE 16777216     // 16 MB
 
 const int open_files_limit = 1024;
-void **buffers = NULL;
-const int bufsize = 2 * BLOCKSIZE;
-int *read_offsets;
-int *eof_offsets;
+void **primary_buffers = NULL;
+void **secondary_buffers = NULL;
+int *current_positions;
+ssize_t *bytes_available;
+
+void safe_dealloc(void **ptr) {
+  if (*ptr != NULL) {
+    free(*ptr);
+    *ptr = NULL;
+  }
+}
 
 void init_buffers() {
-  if (buffers == NULL) {
-    buffers = calloc(open_files_limit, sizeof(void*));
-    read_offsets = (int *) calloc(open_files_limit, sizeof(int));
-    eof_offsets = (int *) calloc(open_files_limit, sizeof(int));
+  if (primary_buffers == NULL || secondary_buffers == NULL) {
+    if (primary_buffers != NULL) {
+      free(primary_buffers);
+    }
+    primary_buffers = calloc(open_files_limit, sizeof(void*));
+    if (secondary_buffers != NULL) {
+      free(secondary_buffers);
+    }
+    secondary_buffers = calloc(open_files_limit, sizeof(void*));
+
+    current_positions = (int *) calloc(open_files_limit, sizeof(int));
+    bytes_available = (ssize_t *) calloc(open_files_limit, sizeof(int));
     int i;
     for (i = 0; i < open_files_limit; i++) {
-      buffers[i] = NULL;
+      primary_buffers[i] = NULL;
+      secondary_buffers[i] = NULL;
     }
   }
 }
@@ -38,18 +54,13 @@ int open(const char *pathname, int flags, ...) {
 #ifdef VERBOSE
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
-  buffers[fd] = malloc(bufsize); 
-  read_offsets[fd] = 0;
+  primary_buffers[fd] = malloc(BLOCKSIZE); 
+  secondary_buffers[fd] = malloc(BLOCKSIZE); 
 
   // initial read
   orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
-  ssize_t bytes_read = orig_read(fd, buffers[fd], bufsize);
-
-  if (bytes_read < bufsize) {
-    // TODO EOF not reached
-  } else {
-    // TODO EOF reached
-  }
+  bytes_available[fd] = orig_read(fd, primary_buffers[fd], BLOCKSIZE);
+  bytes_available[fd] += orig_read(fd, secondary_buffers[fd], BLOCKSIZE);
 
   return fd;
 }
@@ -60,10 +71,8 @@ int close(int fd, ...) {
 #ifdef VERBOSE
   printf("File descriptor %d closed with the result %d...\n", fd, return_result);
 #endif
-  if (buffers[fd] != NULL) {
-    free(buffers[fd]);
-    buffers[fd] = NULL;
-  }
+  safe_dealloc(&primary_buffers[fd]);
+  safe_dealloc(&secondary_buffers[fd]);
   return return_result;
 }
 
@@ -71,17 +80,32 @@ ssize_t read(int fd, void *buf, size_t count) {
   orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
   ssize_t bytes_read;
   if (buffers[fd] != NULL) {
-    // TODO what if reached end of buffer
-    memcpy(buf, buffers[fd] + read_offsets[fd], count);
-    read_offsets[fd] += count;
+    if (eof_offsets[fd] == EOF_NOT_REACHED) {
+      // TODO what if reached end of buffer
+    } else {
+      if (current_positions[fd] <= eof_offsets[fd]) {
+        int remaining_bytes = eof_offsets[fd] - current_positions[fd] + 1;
+        if (count > remaining_bytes) {
+          memcpy(buf, buffers[fd] + current_positions[fd], remaining_bytes);
+          eof_offsets[fd] = EOF_REACHED;
+          bytes_read = remaining_bytes;
+        } else {
+          memcpy(buf, buffers[fd] + current_positions[fd], count);
+          current_positions[fd] += count;
+          bytes_read = count;
+        }
+      } else {
+        // TODO circular read
+      }
+    }
 
-    // TODO do differently for corner cases
-    bytes_read = count;
 #ifdef VERBOSE
     printf("%zd B read from file descriptor %d using buffer...\n", bytes_read, fd);
 #endif
   } else {
-    bytes_read = orig_read(fd, buf, count);
+    if (eof_offsets[fd] == EOF_REACHED) {
+      bytes_read = orig_read(fd, buf, count);
+    }
 #ifdef VERBOSE
     printf("%zd B read from file descriptor %d...\n", bytes_read, fd);
 #endif
