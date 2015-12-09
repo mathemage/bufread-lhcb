@@ -26,16 +26,15 @@ void safe_dealloc(void **ptr) {
   }
 }
 
+void safe_calloc(void **ptr, size_t nmemb, size_t size) {
+  safe_dealloc(ptr);
+  *ptr = calloc(nmemb, size);
+}
+
 void init_buffers() {
   if (primary_buffers == NULL || secondary_buffers == NULL) {
-    if (primary_buffers != NULL) {
-      free(primary_buffers);
-    }
-    primary_buffers = calloc(open_files_limit, sizeof(void*));
-    if (secondary_buffers != NULL) {
-      free(secondary_buffers);
-    }
-    secondary_buffers = calloc(open_files_limit, sizeof(void*));
+    safe_calloc(primary_buffers, open_files_limit, sizeof(void*));
+    safe_calloc(secondary_buffers, open_files_limit, sizeof(void*));
 
     current_positions = (int *) calloc(open_files_limit, sizeof(int));
     bytes_available = (ssize_t *) calloc(open_files_limit, sizeof(int));

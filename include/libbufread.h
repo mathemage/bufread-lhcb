@@ -5,7 +5,7 @@
 
    * Creation Date : 07-12-2015
 
-   * Last Modified : Wed 09 Dec 2015 02:23:44 PM CET
+   * Last Modified : Wed 09 Dec 2015 02:30:42 PM CET
 
    * Created By : Karel Ha <mathemage@gmail.com>
 
@@ -21,6 +21,7 @@
 #include <string.h>
 
 void safe_dealloc(void **ptr);
+void safe_calloc(void **ptr, size_t nmemb, size_t size);
 
 typedef int (*orig_open_f_type)(const char *pathname, int flags);
 typedef int (*orig_close_f_type)(int fd);
