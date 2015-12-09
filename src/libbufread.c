@@ -16,28 +16,16 @@
 const int open_files_limit = 1024;
 void **primary_buffers = NULL;
 void **secondary_buffers = NULL;
-int *current_positions;
-ssize_t *bytes_available;
-
-void safe_dealloc(void **ptr) {
-  if (*ptr != NULL) {
-    free(*ptr);
-    *ptr = NULL;
-  }
-}
-
-void safe_calloc(void **ptr, size_t nmemb, size_t size) {
-  safe_dealloc(ptr);
-  *ptr = calloc(nmemb, size);
-}
+int *current_positions = NULL;
+ssize_t *bytes_available = NULL;
 
 void init_buffers() {
-  if (primary_buffers == NULL || secondary_buffers == NULL) {
-    safe_calloc(primary_buffers, open_files_limit, sizeof(void*));
-    safe_calloc(secondary_buffers, open_files_limit, sizeof(void*));
-
+  if (primary_buffers == NULL) {
+    primary_buffers = calloc(open_files_limit, sizeof(void*));
+    secondary_buffers = calloc(open_files_limit, sizeof(void*));
     current_positions = (int *) calloc(open_files_limit, sizeof(int));
     bytes_available = (ssize_t *) calloc(open_files_limit, sizeof(int));
+
     int i;
     for (i = 0; i < open_files_limit; i++) {
       primary_buffers[i] = NULL;
@@ -70,15 +58,24 @@ int close(int fd, ...) {
 #ifdef VERBOSE
   printf("File descriptor %d closed with the result %d...\n", fd, return_result);
 #endif
-  safe_dealloc(&primary_buffers[fd]);
-  safe_dealloc(&secondary_buffers[fd]);
+  if (primary_buffers[fd] != NULL) {
+    free(primary_buffers[fd]);
+    primary_buffers[fd] = NULL;
+  }
+  if (secondary_buffers[fd] != NULL) {
+    free(secondary_buffers[fd]);
+    secondary_buffers[fd] = NULL;
+  }
   return return_result;
 }
 
 ssize_t read(int fd, void *buf, size_t count) {
   orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
-  ssize_t bytes_read;
-  if (buffers[fd] != NULL) {
+  ssize_t bytes_read = 0;
+  if (primary_buffers[fd] == NULL && secondary_buffers[fd] != NULL) {
+    /* 
+    ssize_t bytes_to_load = 
+
     if (eof_offsets[fd] == EOF_NOT_REACHED) {
       // TODO what if reached end of buffer
     } else {
@@ -96,15 +93,13 @@ ssize_t read(int fd, void *buf, size_t count) {
       } else {
         // TODO circular read
       }
-    }
+    } */
 
 #ifdef VERBOSE
     printf("%zd B read from file descriptor %d using buffer...\n", bytes_read, fd);
 #endif
-  } else {
-    if (eof_offsets[fd] == EOF_REACHED) {
-      bytes_read = orig_read(fd, buf, count);
-    }
+  } else {       // if some problem occured, revert to the regular system read
+    bytes_read = orig_read(fd, buf, count);
 #ifdef VERBOSE
     printf("%zd B read from file descriptor %d...\n", bytes_read, fd);
 #endif
