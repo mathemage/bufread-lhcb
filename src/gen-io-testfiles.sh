@@ -12,7 +12,7 @@ do
   #bytesize=$(echo "floor($f * $bs)" | bc)
   bytesize=$(python -c "from math import floor; print int(floor($f*$bs))")
   randfile="$dir/$bytesize-B.in"
-  cmd="head -c $bytesize < /dev/urandom > $randfile"
+  cmd="head -c $bytesize < /dev/urandom > $randfile && chmod a-w $randfile"
   bash -c "$cmd"
   echo $cmd
 done
