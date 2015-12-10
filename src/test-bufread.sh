@@ -7,7 +7,6 @@ dir="/tmp/io-testfiles"
 
 for infile in $dir/*.in
 do
-  echo $f
   outfile=$dir/$(basename "$infile" in)out
   >$outfile
   chmod 777 $outfile
