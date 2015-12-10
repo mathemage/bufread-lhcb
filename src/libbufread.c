@@ -10,7 +10,7 @@
 
 #include "libbufread.h"
 
-#define VERBOSE
+// #define VERBOSE
 #define BLOCKSIZE 16777216     // 16 MB
 
 const int open_files_limit = 1024;
