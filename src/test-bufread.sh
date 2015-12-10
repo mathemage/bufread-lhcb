@@ -3,7 +3,15 @@
 make clean
 make
 
->blob.out
-chmod 777 blob.out
-LD_PRELOAD="$LD_PRELOAD:./libbufread.so" cp blob.in blob.out
-diff blob.in blob.out
+dir="/tmp/io-testfiles"
+
+for infile in $dir/*.in
+do
+  echo $f
+  outfile=$dir/$(basename "$infile" in)out
+  >$outfile
+  chmod 777 $outfile
+  cmd="LD_PRELOAD="$LD_PRELOAD:./libbufread.so" cp $infile $outfile -f && diff $infile $outfile"
+  echo "Executing: $cmd"
+  bash -c "$cmd" || { echo "Failure: $cmd"; exit 1; }
+done
