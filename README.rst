@@ -34,12 +34,21 @@ Comments on the source code
 
 Code has been written in C language. It compiles to `.so` file. With `LD_PRELOAD` trick it can intercept system calls `open`, `close` and `read`, which are used by `cp` command.
 
+./include/libbufread.h
+~~~~~~~~~~~~~~~~~~~~~~
+
+- `MIN()` = preprocessor macro for minimum of two values
+- `*orig_open_f_type`, `*orig_close_f_type` resp. `*orig_read_f_type` = pointer to functions data type, for retrieving original system version of syscalls `open()`, `close()` resp. `read()`
+
 ./src/libbufread.c
 ~~~~~~~~~~~~~~~~~~
 
-TODO
+- `init_buffers()` = allocate and initialize memory (array of arrays) for buffers (done only once in the program)
+- `open()` = intercepted version of `open()`; primary and secondary buffers (on the index of file descriptor) are allocated and pre-filled with data from file
+- `close()` = intercepted version of `close()`; primary and secondary buffers (corresponding to the file descriptor) are deallocated
+- `read()` = intercepted version of `read()`; see section `Algorithm`_ for the explanation
 
-./include/libbufread.h
-~~~~~~~~~~~~~~~~~~~~~~
+Algorithm
+---------
 
 TODO
