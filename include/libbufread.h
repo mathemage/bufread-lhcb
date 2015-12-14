@@ -5,7 +5,7 @@
 
    * Creation Date : 07-12-2015
 
-   * Last Modified : Wed 09 Dec 2015 02:59:54 PM CET
+   * Last Modified : Mon 14 Dec 2015 03:56:08 PM CET
 
    * Created By : Karel Ha <mathemage@gmail.com>
 
@@ -29,5 +29,10 @@
 typedef int (*orig_open_f_type)(const char *pathname, int flags);
 typedef int (*orig_close_f_type)(int fd);
 typedef ssize_t (*orig_read_f_type)(int fd, void *buf, size_t count);
+
+void init_buffers();
+int open(const char *pathname, int flags, ...);
+int close(int fd, ...);
+ssize_t read(int fd, void *buf, size_t count);
 
 #endif
