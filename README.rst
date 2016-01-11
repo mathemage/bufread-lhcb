@@ -51,4 +51,9 @@ Code has been written in C language. It compiles to `.so` file. With `LD_PRELOAD
 Algorithm
 ---------
 
+.. image:: img/algorithm.jpg
+
+Legend
+~~~~~~
+
 TODO
