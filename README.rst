@@ -94,6 +94,25 @@ Testing is done by copying chosen input files and checking, whether the output f
 
 This script generates several input files with random content using `/dev/urandom`. The size of the files are multiples (see `$factors` in the script) of the chosen blocksize `$bs` (set to 16 MB). The writing permission are removed at the end, since these files serve as exclusively input files.
 
+An example of a run::
+
+  mathemage@mathemage-TTL-TEKNOPRO:/afs/cern.ch/user/k/kha/bufread-lhcb/src$ ./gen-io-testfiles.sh 
+  head -c 0 < /dev/urandom > /tmp/io-testfiles/0-B.in && chmod a-w /tmp/io-testfiles/0-B.in
+  head -c 8388608 < /dev/urandom > /tmp/io-testfiles/8388608-B.in && chmod a-w /tmp/io-testfiles/8388608-B.in
+  head -c 16777216 < /dev/urandom > /tmp/io-testfiles/16777216-B.in && chmod a-w /tmp/io-testfiles/16777216-B.in
+  head -c 25165824 < /dev/urandom > /tmp/io-testfiles/25165824-B.in && chmod a-w /tmp/io-testfiles/25165824-B.in
+  head -c 33554432 < /dev/urandom > /tmp/io-testfiles/33554432-B.in && chmod a-w /tmp/io-testfiles/33554432-B.in
+  head -c 41943040 < /dev/urandom > /tmp/io-testfiles/41943040-B.in && chmod a-w /tmp/io-testfiles/41943040-B.in
+  head -c 50331648 < /dev/urandom > /tmp/io-testfiles/50331648-B.in && chmod a-w /tmp/io-testfiles/50331648-B.in
+  head -c 58720256 < /dev/urandom > /tmp/io-testfiles/58720256-B.in && chmod a-w /tmp/io-testfiles/58720256-B.in
+  head -c 67108864 < /dev/urandom > /tmp/io-testfiles/67108864-B.in && chmod a-w /tmp/io-testfiles/67108864-B.in
+  head -c 75497472 < /dev/urandom > /tmp/io-testfiles/75497472-B.in && chmod a-w /tmp/io-testfiles/75497472-B.in
+  head -c 1677721600 < /dev/urandom > /tmp/io-testfiles/1677721600-B.in && chmod a-w /tmp/io-testfiles/1677721600-B.in
+  head -c 16777216000 < /dev/urandom > /tmp/io-testfiles/16777216000-B.in && chmod a-w /tmp/io-testfiles/16777216000-B.in
+  head -c 52707134 < /dev/urandom > /tmp/io-testfiles/52707134-B.in && chmod a-w /tmp/io-testfiles/52707134-B.in
+  head -c 527071340 < /dev/urandom > /tmp/io-testfiles/527071340-B.in && chmod a-w /tmp/io-testfiles/527071340-B.in
+  head -c 5270713401 < /dev/urandom > /tmp/io-testfiles/5270713401-B.in && chmod a-w /tmp/io-testfiles/5270713401-B.in
+
 ./src/test-bufread.sh
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -107,6 +126,27 @@ This script
    c. intercept `read()` by adding the bufread library to `LD_PRELOAD` variable.
    d. copy from the input file to the output file.
    e. compares the input file and the output file by `diff` and exits with failure if they differ.
+
+An example of a run::
+
+  mathemage@mathemage-TTL-TEKNOPRO:/afs/cern.ch/user/k/kha/bufread-lhcb/src$ ./test-bufread.sh
+  rm -f *.o *.so
+  gcc -Wall -g -O2 -fPIC -ldl -shared -I../include libbufread.c -o libbufread.so
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/0-B.in /tmp/io-testfiles/0-B.out -f && diff /tmp/io-testfiles/0-B.in /tmp/io-testfiles/0-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/16777216000-B.in /tmp/io-testfiles/16777216000-B.out -f && diff /tmp/io-testfiles/16777216000-B.in /tmp/io-testfiles/16777216000-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/1677721600-B.in /tmp/io-testfiles/1677721600-B.out -f && diff /tmp/io-testfiles/1677721600-B.in /tmp/io-testfiles/1677721600-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/16777216-B.in /tmp/io-testfiles/16777216-B.out -f && diff /tmp/io-testfiles/16777216-B.in /tmp/io-testfiles/16777216-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/25165824-B.in /tmp/io-testfiles/25165824-B.out -f && diff /tmp/io-testfiles/25165824-B.in /tmp/io-testfiles/25165824-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/33554432-B.in /tmp/io-testfiles/33554432-B.out -f && diff /tmp/io-testfiles/33554432-B.in /tmp/io-testfiles/33554432-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/41943040-B.in /tmp/io-testfiles/41943040-B.out -f && diff /tmp/io-testfiles/41943040-B.in /tmp/io-testfiles/41943040-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/50331648-B.in /tmp/io-testfiles/50331648-B.out -f && diff /tmp/io-testfiles/50331648-B.in /tmp/io-testfiles/50331648-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/5270713401-B.in /tmp/io-testfiles/5270713401-B.out -f && diff /tmp/io-testfiles/5270713401-B.in /tmp/io-testfiles/5270713401-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/527071340-B.in /tmp/io-testfiles/527071340-B.out -f && diff /tmp/io-testfiles/527071340-B.in /tmp/io-testfiles/527071340-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/52707134-B.in /tmp/io-testfiles/52707134-B.out -f && diff /tmp/io-testfiles/52707134-B.in /tmp/io-testfiles/52707134-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/58720256-B.in /tmp/io-testfiles/58720256-B.out -f && diff /tmp/io-testfiles/58720256-B.in /tmp/io-testfiles/58720256-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/67108864-B.in /tmp/io-testfiles/67108864-B.out -f && diff /tmp/io-testfiles/67108864-B.in /tmp/io-testfiles/67108864-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/75497472-B.in /tmp/io-testfiles/75497472-B.out -f && diff /tmp/io-testfiles/75497472-B.in /tmp/io-testfiles/75497472-B.out
+  Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/8388608-B.in /tmp/io-testfiles/8388608-B.out -f && diff /tmp/io-testfiles/8388608-B.in /tmp/io-testfiles/8388608-B.out
 
 TODO
 ----
