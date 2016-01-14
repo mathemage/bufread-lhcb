@@ -107,3 +107,9 @@ This script
    c. intercept `read()` by adding the bufread library to `LD_PRELOAD` variable.
    d. copy from the input file to the output file.
    e. compares the input file and the output file by `diff` and exits with failure if they differ.
+
+TODO
+----
+
+- discriminate based on filepaths given by a config file
+- check for file permissions
