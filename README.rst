@@ -83,3 +83,27 @@ Description of the algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TODO
+
+Testing
+-------
+
+Testing is done by copying chosen input files and checking, whether the output files differ from them. Using `LD_PRELOAD` trick, the regular `read()` is intercepted and the bufread version is used instead.
+
+./src/gen-io-testfiles.sh
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This script generates several input files with random content using `/dev/urandom`. The size of the files are multiples (see `$factors` in the script) of the chosen blocksize `$bs` (set to 16 MB). The writing permission are removed at the end, since these files serve as exclusively input files.
+
+./src/test-bufread.sh
+~~~~~~~~~~~~~~~~~~~~~
+
+This script
+
+1. recompiles the library.
+2. For every input file in the given directory `$dir`
+
+   a. creates an empty output file with `*.out` extension.
+   b. adjust permission rights accordingly.
+   c. intercept `read()` by adding the bufread library to `LD_PRELOAD` variable.
+   d. copy from the input file to the output file.
+   e. compares the input file and the output file by `diff` and exits with failure if they differ.
