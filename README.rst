@@ -48,6 +48,15 @@ Code has been written in C language. It compiles to `.so` file. With `LD_PRELOAD
 - `close()` = intercepted version of `close()`; primary and secondary buffers (corresponding to the file descriptor) are deallocated
 - `read()` = intercepted version of `read()`; see section `Algorithm`_ for the explanation
 
+Makefile
+--------
+
+Compile by `make`, `make all` or `make libbufread`. This creates the shared library `libbufread.so`.
+
+Remove temporary and `*.so` files by `make clean`.
+
+The flags `-fPIC` and `-ldl` are needed to store the original versions of system calls.
+
 Algorithm
 ---------
 
