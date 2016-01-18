@@ -162,3 +162,4 @@ TODO
 
 - discriminate based on filepaths given by a config file
 - check for file permissions
+- open_files_limit <- ulimit -n
