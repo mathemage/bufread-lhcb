@@ -91,7 +91,38 @@ Legend
 Description of the algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+1. request to open a new file
+
+   a. open the file using the original syscall `open()` and retrieve the file descriptor `fd` from the return value
+   b. allocate primary and secondary buffers of `BLOCKSIZE` size, on indices corresponding to `fd`
+   c. initialize the corresponding current positions to 0
+   d. pre-fill both buffers with initial data from the file, increasing the corresponding `bytes_available` value accordingly
+   e. return `fd` as the file descriptor
+
+2. request to read `count` bytes from a file descriptor `fd` to buffer `buf`
+
+   a. if pointers to both buffers are not `NULL` (i.e. the buffers have been allocated), continue with bufread version of `read()`. Otherwise use the original system call `read()`.
+   b. until `count` is non-zero and there are still bytes available from the file, repeat:
+
+      i. calculate `bytes_to_load` (see subsection `Legend`_)
+      ii. copy `bytes_to_load` bytes from primary buffer (on correct reading position, determined by `current_positions`) to buffer `buf`
+      iii. shift `bytes_to_load` forward in buffer `buf` (pointer arithmetics) and in the primary buffer (by increasing `current_positions[fd]`)
+      iv. decrease number of `bytes_available` and `count` by (already processed) `bytes_to_load` bytes
+      v. increase number of `bytes_read` by (already read) `bytes_to_load` bytes
+      vi. if the secondary buffer is reached:
+
+          - swap the pointers to buffers (and thus their respective roles)
+          - pre-fill the secondary buffer with data from the file
+          - increase `bytes_available` accordingly by number of bytes read from the file
+          - re-initialize `current_positions` to 0
+
+   c. return `bytes_read`
+
+3. request to close the file
+
+   a. close the file using the original syscall `close()` and retrieve the return value `return_result`
+   b. deallocate both buffers provided the corresponding pointers are not `NULL`
+   c. return `return_result`
 
 
 Testing
