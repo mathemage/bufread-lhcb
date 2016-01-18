@@ -75,15 +75,15 @@ Legend
   3. the one leading from `ba` is the case, where `ba` is the minimum of all three values. 
 
     - If `count` is strictly greater, then there's not enough bytes until the end of file and via the `bytes_to_load` this will reflect in the total `bytes_read` (there have been less bytes read than requested by `read()`.
-    - If `bs - cur_pos` is strictly greater, then all bytes available reside in the current (primary) buffer. That's why the secondary buffer is striked through.
+    - If `bs - cur_pos` is strictly greater, then all bytes available reside in the current (primary) buffer. That's why the secondary buffer is crossed out.
 
 - `count` = the number of requested bytes left to read. This number is decreased accordingly with every load from primary buffer to the final buffer `buf`.
-- `bs` = the size of the primary and also secondary buffer. It is set to 16 MB.
-- `cur_pos`, `cur_pos[]`, `cur_pos[fd]`, in the source code also called `current_positions[]` = the number of bytes from the beginning of the primary buffer that have been already used / loaded. It advances every time the data are copied from the primary buffer to the final buffer `buf`. There's one integer variable per each file descriptor `fd`.
-- `ba` = "bytes available". The number of unread bytes from the file that have been loaded to the primary and secondary buffer, but they haven't been copied to the final buffer `buf` yet. `ba` doesn't have to be a multiple of `bs`, in case the end of file is reached (valid bytes from the file don't reside the whole buffer, see the diagram where `ba` is the minimum).
+- `bs`, `BLOCKSIZE` = the size of the primary and also secondary buffer. It is set to 16 MB.
+- `cur_pos`, `cur_pos[]`, `cur_pos[fd]`, `current_positions[]`, `current_positions[fd]`, in the source code also called `current_positions[]` = the number of bytes from the beginning of the primary buffer that have been already used / loaded. It advances every time the data are copied from the primary buffer to the final buffer `buf`. There's one integer variable per each file descriptor `fd`.
+- `ba`, `bytes_available[]`, `bytes_available[fd]` = "bytes available". The number of unread bytes from the file that have been loaded to the primary and secondary buffer, but they haven't been copied to the final buffer `buf` yet. `ba` doesn't have to be a multiple of `bs`, in case the end of file is reached (valid bytes from the file don't reside the whole buffer, see the diagram where `ba` is the minimum).
 - `buf` = the final buffer given as an argument to `read()`
-- `prim[]`, `prim[fd]` = the primary buffer corresponding to the file descriptor `fd`
-- `sec[]`, `sec[fd]` = the secondary buffer corresponding to the file descriptor `fd`
+- `prim[]`, `prim[fd]`, `primary_buffers[]`, `primary_buffers[fd]` = the primary buffer corresponding to the file descriptor `fd`
+- `sec[]`, `sec[fd]`, `secondary_buffers[]`, `secondary_buffers[fd]` = the secondary buffer corresponding to the file descriptor `fd`
 - `bytes_read` = the total number of bytes copied from the primary and secondary buffers to `buf`, altogether across all steps. It usually equals to `count`, unless the end of file is reached prematurely (in which case it equals to the filesize). `bytes_read` serves as the return value of `read()`
 - `swap_buffers()`, `swap_buffers(fd)` = exchange the role of the primary and secondary buffer by swapping their pointers
 - `orig_read()` = the original system version of the syscall `read()`
@@ -92,6 +92,7 @@ Description of the algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TODO
+
 
 Testing
 -------
