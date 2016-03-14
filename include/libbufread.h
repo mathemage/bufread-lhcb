@@ -5,7 +5,7 @@
 
    * Creation Date : 07-12-2015
 
-   * Last Modified : Mon 14 Dec 2015 03:56:08 PM CET
+   * Last Modified : Mon 14 Mar 2016 03:17:23 PM CET
 
    * Created By : Karel Ha <mathemage@gmail.com>
 
@@ -31,6 +31,9 @@ typedef int (*orig_close_f_type)(int fd);
 typedef ssize_t (*orig_read_f_type)(int fd, void *buf, size_t count);
 
 void init_buffers();
+void trim_trailing_newline(char * str);
+int is_prefix(char *prefix, const char *str);
+int is_in_whitelist(const char *pathname);
 int open(const char *pathname, int flags, ...);
 int close(int fd, ...);
 ssize_t read(int fd, void *buf, size_t count);

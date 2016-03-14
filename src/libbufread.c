@@ -12,6 +12,8 @@
 
 // #define VERBOSE
 #define BLOCKSIZE 16777216     // 16 MB
+const int true = 1;
+const int false = 0;
 
 const int open_files_limit = 1024;
 void **primary_buffers = NULL;
@@ -34,6 +36,55 @@ void init_buffers() {
   }
 }
 
+void trim_trailing_newline(char * str) {
+  size_t lenstr = strlen(str);
+  if (lenstr > 0 && str[lenstr-1] == '\n') {
+    str[lenstr-1] = '\0';
+  }
+}
+
+int is_prefix(char *prefix, const char *str) {
+  trim_trailing_newline(prefix);
+  size_t lenprefix = strlen(prefix);
+  size_t lenstr = strlen(str);
+
+#ifdef VERBOSE
+  printf("is_prefix(\"%s\", \"%s\") == %d\n\n",
+      prefix, str, lenstr < lenprefix ? false : strncmp(prefix, str, lenprefix) == 0);
+#endif
+  return lenstr < lenprefix ? false : strncmp(prefix, str, lenprefix) == 0;
+}
+
+int is_in_whitelist(const char *pathname) {
+  FILE * fp = fopen("whitelist.conf", "r");
+  if (fp == NULL) {
+    fprintf(stderr, "File whitelist.conf couldn't be opened!\n");
+    return false;
+  }
+
+  char * dir = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  while ((read = getline(&dir, &len, fp)) != -1) {
+    if (read > 0) {                 // skip empty lines
+#ifdef VERBOSE
+    printf("dir == \"%s\"\n", dir);
+#endif
+      if (is_prefix(dir, pathname) == true) {
+        return true;
+      }
+    }
+  }
+
+  fclose(fp);
+  if (dir) {
+    free(dir);
+  }
+
+  return false;
+}
+
 int open(const char *pathname, int flags, ...) {
   init_buffers();
   orig_open_f_type orig_open = (orig_open_f_type)dlsym(RTLD_NEXT,"open");
@@ -41,14 +92,16 @@ int open(const char *pathname, int flags, ...) {
 #ifdef VERBOSE
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
-  primary_buffers[fd] = malloc(BLOCKSIZE); 
-  secondary_buffers[fd] = malloc(BLOCKSIZE); 
-  current_positions[fd] = 0;
+  if (is_in_whitelist(pathname) == true) {
+    primary_buffers[fd] = malloc(BLOCKSIZE); 
+    secondary_buffers[fd] = malloc(BLOCKSIZE); 
+    current_positions[fd] = 0;
 
-  // initial read
-  orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
-  bytes_available[fd] = orig_read(fd, primary_buffers[fd], BLOCKSIZE);
-  bytes_available[fd] += orig_read(fd, secondary_buffers[fd], BLOCKSIZE);
+    // initial read
+    orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
+    bytes_available[fd] = orig_read(fd, primary_buffers[fd], BLOCKSIZE);
+    bytes_available[fd] += orig_read(fd, secondary_buffers[fd], BLOCKSIZE);
+  }
 
   return fd;
 }
