@@ -189,6 +189,11 @@ An example of a run::
   Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/75497472-B.in /tmp/io-testfiles/75497472-B.out -f && diff /tmp/io-testfiles/75497472-B.in /tmp/io-testfiles/75497472-B.out
   Executing: LD_PRELOAD=:./libbufread.so cp /tmp/io-testfiles/8388608-B.in /tmp/io-testfiles/8388608-B.out -f && diff /tmp/io-testfiles/8388608-B.in /tmp/io-testfiles/8388608-B.out
 
+./src/rapid-test.sh
+~~~~~~~~~~~~~~~~~~~~~
+
+The script identical to the one as above, with restriction to input files of size < 30 MB.
+
 TODO
 ----
 
