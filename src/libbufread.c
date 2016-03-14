@@ -43,9 +43,21 @@ void trim_trailing_newline(char * str) {
   }
 }
 
+char * stradd(const char * a, const char * b){
+  size_t len = strlen(a) + strlen(b);
+  char * result = (char *) malloc(len * sizeof(char) + 1);
+  *result = '\0';
+  return strcat(strcat(result, a), b);
+}
+
 int is_prefix(char *prefix, const char *str) {
   trim_trailing_newline(prefix);
   size_t lenprefix = strlen(prefix);
+  if (prefix[lenprefix-1] != '/') {
+    prefix = stradd(prefix, "/");
+    lenprefix++;
+  }
+
   size_t lenstr = strlen(str);
 
 #ifdef VERBOSE
