@@ -76,7 +76,7 @@ bool is_in_whitelist(const char *pathname) {
   ssize_t read;
 
   while ((read = getline(&dir, &len, fp)) != -1) {
-    if (read > 0) {                 // skip empty lines
+    if (read > 1) {                 // skip empty lines
       // sanitize dir path
       trim_trailing_newline(dir);
       dir = append_slash(dir);
