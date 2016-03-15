@@ -19,3 +19,6 @@ do
     bash -c "$cmd" || { echo "Failure: $cmd"; exit 1; }
   fi
 done
+
+echo
+echo "Passed all tests!"
