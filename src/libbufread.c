@@ -38,28 +38,28 @@ void init_buffers() {
 
 void trim_trailing_newline(char * str) {
   size_t lenstr = strlen(str);
-  if (lenstr > 0 && str[lenstr-1] == '\n') {
-    str[lenstr-1] = '\0';
+  if (lenstr > 0 && str[lenstr - 1] == '\n') {
+    str = (char *) realloc(str, lenstr);              // lenstr <= strlen() doesn't account for final '\0'
+    str[lenstr - 1] = '\0';
   }
 }
 
-char * stradd(const char * a, const char * b){
-  size_t len = strlen(a) + strlen(b);
-  char * result = (char *) malloc(len * sizeof(char) + 1);
-  *result = '\0';
-  return strcat(strcat(result, a), b);
+char * append_slash(char * str) {
+  size_t lenstr = strlen(str);
+  if (lenstr > 0 && str[lenstr - 1] != '/') {
+    str = (char *) realloc(str, lenstr + 2);          // +2 <= '/' and '\0'
+    return strcat(str, "/");
+  }
+  return str;
 }
 
 int is_prefix(char *prefix, const char *str) {
+  // sanitize prefix
   trim_trailing_newline(prefix);
+  prefix = append_slash(prefix);
+
   size_t lenprefix = strlen(prefix);
-  if (prefix[lenprefix-1] != '/') {
-    prefix = stradd(prefix, "/");
-    lenprefix++;
-  }
-
   size_t lenstr = strlen(str);
-
 #ifdef VERBOSE
   printf("is_prefix(\"%s\", \"%s\") == %d\n\n",
       prefix, str, lenstr < lenprefix ? false : strncmp(prefix, str, lenprefix) == 0);
@@ -81,7 +81,7 @@ int is_in_whitelist(const char *pathname) {
   while ((read = getline(&dir, &len, fp)) != -1) {
     if (read > 0) {                 // skip empty lines
 #ifdef VERBOSE
-    printf("dir == \"%s\"\n", dir);
+      printf("dir == \"%s\"\n", dir);
 #endif
       if (is_prefix(dir, pathname) == true) {
         return true;
