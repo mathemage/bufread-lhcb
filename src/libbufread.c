@@ -54,10 +54,6 @@ char * append_slash(char * str) {
 }
 
 int is_prefix(char *prefix, const char *str) {
-  // sanitize prefix
-  trim_trailing_newline(prefix);
-  prefix = append_slash(prefix);
-
   size_t lenprefix = strlen(prefix);
   size_t lenstr = strlen(str);
 #ifdef VERBOSE
@@ -80,6 +76,10 @@ int is_in_whitelist(const char *pathname) {
 
   while ((read = getline(&dir, &len, fp)) != -1) {
     if (read > 0) {                 // skip empty lines
+      // sanitize dir path
+      trim_trailing_newline(dir);
+      dir = append_slash(dir);
+
 #ifdef VERBOSE
       printf("dir == \"%s\"\n", dir);
 #endif
