@@ -12,8 +12,9 @@
 
 // #define VERBOSE
 #define BLOCKSIZE 16777216     // 16 MB
-const int true = 1;
-const int false = 0;
+typedef int bool;
+const bool true = 1;
+const bool false = 0;
 
 const int open_files_limit = 1024;
 void **primary_buffers = NULL;
@@ -63,7 +64,7 @@ int is_prefix(char *prefix, const char *str) {
   return lenstr < lenprefix ? false : strncmp(prefix, str, lenprefix) == 0;
 }
 
-int is_in_whitelist(const char *pathname) {
+bool is_in_whitelist(const char *pathname) {
   FILE * fp = fopen("whitelist.conf", "r");
   if (fp == NULL) {
     fprintf(stderr, "File whitelist.conf couldn't be opened!\n");
