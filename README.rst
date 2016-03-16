@@ -28,6 +28,7 @@ Therefore, it's more advisable to load from a disk into a temporary buffer in me
 In case of a `read()` that overlaps the end of buffer, a secondary buffer of 16 MB is available. Once it's reached, the new data is loaded into the original (primary) buffer and the roles of the primary and the secondary buffers are swapped.
 
 .. image:: img/instructions.jpg
+   :width: 1080 px
 
 Comments on the source code
 ---------------------------
@@ -61,6 +62,7 @@ Algorithm
 ---------
 
 .. image:: img/algorithm.jpg
+   :width: 1080 px
 
 Legend
 ~~~~~~
@@ -129,6 +131,9 @@ Description of the algorithm
 Description of is_in_whitelist() functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. image:: img/whitelist.jpg
+   :width: 1080 px
+
 1. store `abs_pathname` = `pathname` with prepended current if `pathname` is a relative path
 2. for each line `dir` of `whitelist.conf`
 
@@ -141,8 +146,6 @@ Description of is_in_whitelist() functionality
    b. check if `dir` is a prefix of the tested `abs_pathname` -> if so, break the loop
 
 3. close files, clean up and return the boolean result "found"
-
-See also the following diagram TODO
 
 Testing
 -------
