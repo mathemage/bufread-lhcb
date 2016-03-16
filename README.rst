@@ -219,7 +219,7 @@ The script identical to the one as above, with restriction to input files of siz
 ./src/test-relative-paths.sh
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO!!!
+The script tests intercepted `cp` for relative filepaths. It copies and compares all the infiles in the `test/` folder.
 
 TODO
 ----
