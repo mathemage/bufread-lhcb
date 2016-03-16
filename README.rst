@@ -224,8 +224,11 @@ The script tests intercepted `cp` for relative filepaths. It copies and compares
 TODO
 ----
 
-- discriminate based on filepaths given by a config file
-- check for file permissions
-- open_files_limit <- ulimit -n
-- beware of whitelist.conf: even the destinations of `cp` must be in the whitelist
-- set path to whitelist.conf in a more flexible way: now it needs to be in the same folder as `libbufread.so`
+These are some suggestions for future work and how to improve the project:
+
+- Check for file permissions and flags. Possibly duplicate them (see `open()` function).
+- Set open_files_limit dynamically, perhaps using `ulimit -n`.
+- As of now, even the destinations of `cp` must be in the whitelist -> deal with this by adding a new feature?
+- Set the path to `whitelist.conf` in a more flexible way: now it needs to be in the same folder as `libbufread.so` -> with system variable? It cannot be a command-line argument, though, because we are passing `libbufread.so` as a shared library.
+- Stress-test bufread in a multi-threaded / parallel environment, when there are several threads / instances of `cp` copying between various files. My supervisor Rainer Schwemmer recommends `fio` tool for this task: http://freecode.com/projects/fio
+- Implement and use the safe version of `malloc()` instead. This `safe_malloc()` should check, if memory was allocated and the returned pointer is not `NULL`, otherwise the program should exit.
