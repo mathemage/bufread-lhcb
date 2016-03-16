@@ -94,10 +94,12 @@ Description of the algorithm
 1. request to open a new file
 
    a. open the file using the original syscall `open()` and retrieve the file descriptor `fd` from the return value
-   b. allocate primary and secondary buffers of `BLOCKSIZE` size, on indices corresponding to `fd`
-   c. initialize the corresponding current positions to 0
-   d. pre-fill both buffers with initial data from the file, increasing the corresponding `bytes_available` value accordingly
-   e. return `fd` as the file descriptor
+   b. iterate over lines of `whitelist.conf` (i.e. a configuration file containing all directories, in which `bufread` is allowed)
+   
+     i. if the file is located in a subdirectory of some directory listed in `whitelist.conf`, allocate primary and secondary buffers of `BLOCKSIZE` size, on indices corresponding to `fd`
+     ii. initialize the corresponding current positions to 0
+     iii. pre-fill both buffers with initial data from the file, increasing the corresponding `bytes_available` value accordingly
+     iv. return `fd` as the file descriptor
 
 2. request to read `count` bytes from a file descriptor `fd` to buffer `buf`
 
@@ -124,6 +126,23 @@ Description of the algorithm
    b. deallocate both buffers provided the corresponding pointers are not `NULL`
    c. return `return_result`
 
+Description of is_in_whitelist() functionality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. store `abs_pathname` = `pathname` with prepended current if `pathname` is a relative path
+2. for each line `dir` of `whitelist.conf`
+
+   a. sanitize `dir`
+   
+      i. remove the trailing newline 
+      ii. append a slash (if it's missing) 
+      iii. prepend the current directory (if `dir` is a relative path)
+
+   b. check if `dir` is a prefix of the tested `abs_pathname` -> if so, break the loop
+
+3. close files, clean up and return the boolean result "found"
+
+See also the following diagram TODO
 
 Testing
 -------
@@ -194,9 +213,16 @@ An example of a run::
 
 The script identical to the one as above, with restriction to input files of size < 30 MB.
 
+./src/test-relative-paths.sh
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO!!!
+
 TODO
 ----
 
 - discriminate based on filepaths given by a config file
 - check for file permissions
 - open_files_limit <- ulimit -n
+- beware of whitelist.conf: even the destinations of `cp` must be in the whitelist
+- set path to whitelist.conf in a more flexible way: now it needs to be in the same folder as `libbufread.so`
