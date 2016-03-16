@@ -64,6 +64,24 @@ int is_prefix(char *prefix, const char *str) {
   return lenstr < lenprefix ? false : strncmp(prefix, str, lenprefix) == 0;
 }
 
+char * prepend_cur_dir(char * str) {
+  orig_get_current_dir_name_f_type get_current_dir_name = (orig_get_current_dir_name_f_type) dlsym(RTLD_NEXT, "get_current_dir_name");
+  char * cur_dir = (char *) get_current_dir_name();
+
+  size_t lenstr = strlen(str);
+  char * orig_str = (char *) malloc(lenstr + 1);                    // +1 <= terminal '\0' 
+  strcpy(orig_str, str);
+
+  str = (char *) realloc(str, strlen(cur_dir) + strlen(str) + 2);   // +2 <= '/' and terminal '\0'
+  strcpy(str, cur_dir);
+  strcat(str, "/");
+  strcat(str, orig_str);
+
+  free(orig_str);
+  free(cur_dir);
+  return str;
+}
+
 bool is_in_whitelist(const char *pathname) {
   FILE * fp = fopen("whitelist.conf", "r");
   if (fp == NULL) {
@@ -71,21 +89,34 @@ bool is_in_whitelist(const char *pathname) {
     return false;
   }
 
+  // sanitize pathname
+  size_t len_pathname = strlen(pathname);
+  char * abs_pathname = (char *) malloc(len_pathname + 1);          // +1 <= terminal '\0' 
+  strcpy(abs_pathname, pathname);
+  if (len_pathname > 0 && pathname[0] != '/') {                     // for relative paths...
+    abs_pathname = prepend_cur_dir(abs_pathname);                   // ...prepend the current directory
+  }
+
   char * dir = NULL;
   size_t len = 0;
   ssize_t read;
 
+  bool found = false;
   while ((read = getline(&dir, &len, fp)) != -1) {
-    if (read > 1) {                 // skip empty lines
+    if (read > 1) {                                                 // skip empty lines
       // sanitize dir path
       trim_trailing_newline(dir);
       dir = append_slash(dir);
+      if (dir[0] != '/') {                                          // for relative paths...
+        dir = prepend_cur_dir(dir);                                 // ...prepend the current directory
+      }
 
 #ifdef VERBOSE
       printf("dir == \"%s\"\n", dir);
 #endif
-      if (is_prefix(dir, pathname) == true) {
-        return true;
+      if (is_prefix(dir, abs_pathname) == true) {
+        found = true;
+        break;
       }
     }
   }
@@ -95,23 +126,24 @@ bool is_in_whitelist(const char *pathname) {
     free(dir);
   }
 
-  return false;
+  return found;
 }
 
 int open(const char *pathname, int flags, ...) {
   init_buffers();
-  orig_open_f_type orig_open = (orig_open_f_type)dlsym(RTLD_NEXT,"open");
+  orig_open_f_type orig_open = (orig_open_f_type) dlsym(RTLD_NEXT, "open");
   int fd = orig_open(pathname, flags);
 #ifdef VERBOSE
   printf("File '%s' opened with file descriptor %d...\n", pathname, fd);
 #endif
   if (is_in_whitelist(pathname) == true) {
+
     primary_buffers[fd] = malloc(BLOCKSIZE); 
     secondary_buffers[fd] = malloc(BLOCKSIZE); 
     current_positions[fd] = 0;
 
     // initial read
-    orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
+    orig_read_f_type orig_read = (orig_read_f_type) dlsym(RTLD_NEXT, "read");
     bytes_available[fd] = orig_read(fd, primary_buffers[fd], BLOCKSIZE);
     bytes_available[fd] += orig_read(fd, secondary_buffers[fd], BLOCKSIZE);
   }
@@ -120,7 +152,7 @@ int open(const char *pathname, int flags, ...) {
 }
 
 int close(int fd, ...) {
-  orig_close_f_type orig_close = (orig_close_f_type)dlsym(RTLD_NEXT,"close");
+  orig_close_f_type orig_close = (orig_close_f_type) dlsym(RTLD_NEXT, "close");
   int return_result = orig_close(fd);
 #ifdef VERBOSE
   printf("File descriptor %d closed with the result %d...\n", fd, return_result);
@@ -137,7 +169,7 @@ int close(int fd, ...) {
 }
 
 ssize_t read(int fd, void *buf, size_t count) {
-  orig_read_f_type orig_read = (orig_read_f_type)dlsym(RTLD_NEXT,"read");
+  orig_read_f_type orig_read = (orig_read_f_type) dlsym(RTLD_NEXT, "read");
   ssize_t bytes_read = 0;
   if (primary_buffers[fd] != NULL && secondary_buffers[fd] != NULL) {
     while (count > 0 && bytes_available[fd] > 0) {
